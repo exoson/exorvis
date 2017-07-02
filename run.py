@@ -43,6 +43,7 @@ commands = {
 
 while True:
     try:
+        print 'Listening..'
         cmd = recognize_cmd()
         print 'Recognized: ' + cmd
         if cmd.startswith('google '):

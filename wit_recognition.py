@@ -1,12 +1,13 @@
 from array import array
 import struct
-import pyaudio
 import json
 import requests
 import math
 import time
 
-from constants import WIT_KEY
+import pyaudio
+
+import constants
 
 MAX_SILENT = 5
 THRESHOLD = .03
@@ -15,6 +16,8 @@ FORMAT = pyaudio.paInt16
 RATE = 8000
 CHANNELS = 2
 SHORT_NORMALIZE = (1.0/32768.0)
+DEVICE = constants.CONFIG_DATA['device_idx']
+
 
 def is_silent(block):
     '''Returns if the RMS of block is less than the threshold.'''
@@ -94,16 +97,15 @@ def gen(p, stream):
         yield temp
     print "Swapping to thinking."
 
-
+p = pyaudio.PyAudio()
+stream = p.open(format=FORMAT, channels=1, rate=RATE,
+                input=True, output=False,
+                frames_per_buffer=CHUNK_SIZE,
+                input_device_index=DEVICE)
 
 def recognize_cmd():
     '''Record a command, recognise it with wit.ai and return it as text.'''
-    p = pyaudio.PyAudio()
-    stream = p.open(format=FORMAT, channels=1, rate=RATE,
-                    input=True, output=False,
-                    frames_per_buffer=CHUNK_SIZE)
-
-    headers = {'Authorization': 'Bearer ' + access_key,
+    headers = {'Authorization': 'Bearer ' + constants.WIT_KEY,
                'Content-Type': 'audio/raw; encoding=signed-integer; bits=16;' +
                ' rate=8000; endian=little', 'Transfer-Encoding': 'chunked'}
     url = 'https://api.wit.ai/speech'
@@ -111,7 +113,4 @@ def recognize_cmd():
     resp = requests.post(url, headers=headers, data=gen(p, stream))
     delta_time = time.time() - start_time
     #print 'delta: ' + str(delta_time)
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
     return json.loads(resp.content)['_text']
