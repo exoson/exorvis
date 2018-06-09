@@ -11,7 +11,8 @@ from wit_recognition import recognize_cmd
 core = TelldusCore()
 lights = core.devices()[1]
 
-
+def next_song():
+    pag.press('')
 def pause_movie():
     '''Simulate pressing space.'''
     pag.press('space')
